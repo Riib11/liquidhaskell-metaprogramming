@@ -1,0 +1,25 @@
+name: liquidhaskell-metaprogramming
+version: 0.1.0.0
+github: "riib11/liquidhaskell-metaprogramming"
+license: MIT
+author: "Henry Blanchette"
+copyright: "2022 Henry Blanchette"
+
+extra-source-files:
+  - README.md
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:
+  Please see the README on GitHub at
+  <https://github.com/riib11/liquidhaskell-metaprogramming#README>
+
+dependencies:
+  - liquidhaskell == 0.8.10.7
+  - liquid-base == 4.15.0.0
+
+library:
+  source-dirs: src
+  ghc-options:
+    - -fplugin=LiquidHaskell
