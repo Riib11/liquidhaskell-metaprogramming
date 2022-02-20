@@ -18,8 +18,12 @@ description:
 dependencies:
   - liquidhaskell == 0.8.10.7
   - liquid-base == 4.15.0.0
+  - template-haskell == 2.17.0.0
+  - parsec == 3.1.14.0
+  - haskell-src-meta
 
 library:
   source-dirs: src
   ghc-options:
     - -fplugin=LiquidHaskell
+    - -ddump-splices
