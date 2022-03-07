@@ -7,41 +7,45 @@
 module Tactic.Auto where
 
 import Language.Haskell.TH
+import Language.Haskell.TH.Datatype
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax
 import Proof
 
-data AutoBranch = forall a. AutoBranch (Code Q (a -> Proof)) [Code Q a]
+-- works!
+applications :: [Name] -> Q Exp
+applications names = do
+  ctx <- mapM (\name -> do type_ <- reifyType name; return (name, type_)) names -- :: [(Name, Q Type)]
+  let apps = genApplications ctx
+  bys (map return apps)
+  where
+    genApplications :: [(Name, Type)] -> [Exp]
+    genApplications ctx = flatten $ map (\(x, type_) -> fst <$> go (VarE x, type_)) ctx
+      where
+        go :: (Exp, Type) -> [(Exp, Type)]
+        go (app, type_) = case type_ of
+          -- is a function type, so need to find an argument
+          AppT (AppT ArrowT alpha) beta ->
+            -- apply to all valid arguments
+            flatten [go (AppE app (VarE x), beta) | (x, _) <- filter (\(_, alpha') -> alpha == alpha') ctx]
+          -- isn't a function type, so we are done applying
+          _ -> [(app, type_)]
 
-tactic_auto :: [AutoBranch] -> Code Q Proof
-tactic_auto branches =
-  combineProofs
-    ( fmap
-        ( \(AutoBranch qf qas) ->
-            combineProofs (applications qf qas)
-        )
-        branches
-    )
+bys :: [Q Exp] -> Q Exp
+bys [] = [|trivial|]
+bys (eQ : eQs) = [|$eQ `by` $(bys eQs)|]
 
-apply :: Code Q (a -> b) -> Code Q a -> Code Q b
-apply qf qa = [||$$qf $$qa||]
+flatten :: [[a]] -> [a]
+flatten = foldMap id
 
-applications :: Code Q (a -> b) -> [Code Q a] -> [Code Q b]
-applications qf qas = fmap (apply qf) qas
+f :: Int -> Int
+f x = x + 1
 
--- unTypeCode :: Code m a -> m Exp
+g :: Bool -> Bool -> Int
+g a b = if a && b then 1 else 0
 
-combineProofs :: [Code Q Proof] -> Code Q Proof
-combineProofs [] = [||trivial||]
-combineProofs (p : ps) = [||$$p `by` $$(combineProofs ps)||]
+x = 1 :: Int
 
--- ! OLD
--- tactic_contradiction :: p:(a -> Bool) -> x:a -> {p x}
-tactic_contradiction :: Q Exp -> Q Exp -> Q Exp
-tactic_contradiction qp qx = [|if $qp $qx then trivial else trivial|]
+a = True
 
--- -- repeat :: fuel:Int -> x:a -> p:(a -> Bool) -> {p x}
--- repeat :: Int -> Q Exp -> Q Exp -> Q Exp -> Q Exp
--- repeat fuel x p
---   | fuel == 0 = [|trivial|]
---   | fuel > 0 = _
+b = False
