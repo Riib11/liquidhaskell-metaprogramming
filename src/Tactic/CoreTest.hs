@@ -14,4 +14,8 @@ import Proof
 import Tactic.Core
 
 test :: A -> Proof
-test a = $(compileCore (Destruct ''A [|a|] Pass))
+test a =
+  $( compileCore'
+       (Destruct ''A [|a|] (Applications Pass))
+       ['not, 'odd]
+   )
