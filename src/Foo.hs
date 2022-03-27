@@ -4,34 +4,35 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{-@ LIQUID "--compile-spec" @-}
+-- {-@ LIQUID "--compile-spec" @-}
 
 module Foo where
 
-import Language.Haskell.TH
-import Language.Haskell.TH.Quote
-import Language.Haskell.TH.Syntax
+-- import Language.Haskell.TH
+-- import Language.Haskell.TH.Quote
+-- import Language.Haskell.TH.Syntax
 import Proof
+
 -- import TH
 -- import Tactic.Repeat
-import Tactic.Auto
+-- import Tactic.Auto
 
-lem1 :: Int -> Proof
-lem1 _ = undefined
+-- lem1 :: Int -> Proof
+-- lem1 _ = undefined
 
-lem2 :: Int -> Proof
-lem2 _ = undefined
+-- lem2 :: Int -> Proof
+-- lem2 _ = undefined
 
-test_auto :: Proof
-test_auto =
-  $$( tactic_auto
-        [ AutoBranch [||lem1||] [[||i||] | i <- [1 .. 10]],
-          AutoBranch [||lem2||] [[||i||] | i <- [1 .. 10]]
-        ]
-    )
+-- test_auto :: Proof
+-- test_auto =
+--   $$( tactic_auto
+--         [ AutoBranch [||lem1||] [[||i||] | i <- [1 .. 10]],
+--           AutoBranch [||lem2||] [[||i||] | i <- [1 .. 10]]
+--         ]
+--     )
 
-testQ :: [Code Q Bool]
-testQ = applications [||not||] [[||True||], [||False||]]
+-- testQ :: [Code Q Bool]
+-- testQ = applications [||not||] [[||True||], [||False||]]
 
 -- {-@ measure r :: Int -> Bool @-}
 
@@ -46,21 +47,27 @@ testQ = applications [||not||] [[||True||], [||False||]]
 -- test_fail :: Int -> Proof
 -- test_fail x = trivial `with` [lem (x + i) | i <- [0 .. 9]]
 
--- -- ! why does this cause 20,251 constraints to be checked?!?!?!?!?!?
--- {-@
--- test_verbose :: x:{Int | r x} -> {r (x + 10)}
--- @-}
--- test_verbose :: Int -> Proof
--- test_verbose x =
---   lem x `with` lem (x + 1)
---     `with` lem (x + 2)
---     `with` lem (x + 3)
---     `with` lem (x + 4)
---     `with` lem (x + 5)
---     `with` lem (x + 6)
---     `with` lem (x + 7)
---     `with` lem (x + 8)
---     `with` lem (x + 9)
+{-@ measure r :: Int -> Bool @-}
+
+{-@ assume lem :: x:{Int | r x} -> {r (x + 1)} @-}
+lem :: Int -> Proof
+lem _ = ()
+
+-- ! why does this cause 20,251 constraints to be checked?!?!?!?!?!?
+{-@
+test_verbose :: x:{Int | r x} -> {r (x + 10)}
+@-}
+test_verbose :: Int -> Proof
+test_verbose x =
+  lem x `with` lem (x + 1)
+    `with` lem (x + 2)
+    `with` lem (x + 3)
+    `with` lem (x + 4)
+    `with` lem (x + 5)
+    `with` lem (x + 6)
+    `with` lem (x + 7)
+    `with` lem (x + 8)
+    `with` lem (x + 9)
 
 -- -- ! why does this cause 23,084 constraints to be checked?!?!?!?!?!?
 -- {-@

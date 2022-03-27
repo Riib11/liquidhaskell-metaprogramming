@@ -12,6 +12,9 @@ import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax
 import Proof
 
+auto :: [Name] -> Q Exp
+auto = undefined
+
 -- works!
 applications :: [Name] -> Q Exp
 applications names = do
