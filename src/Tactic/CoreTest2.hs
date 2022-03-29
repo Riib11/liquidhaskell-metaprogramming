@@ -123,12 +123,12 @@ add_comm m n =
          )
    )
 
-{-@
-add_comm :: m:N -> n:N -> {add m (S n) == S (add m n)}
-@-}
-[proof|
-add_comm :: N -> N -> Proof
-add_comm m n = 
-  induct m;
-  auto [add, add_n_Z, add_m_Sn]
-|]
+-- {-@
+-- add_comm :: m:N -> n:N -> {add m (S n) == S (add m n)}
+-- @-}
+-- [proof|
+-- add_comm :: N -> N -> Proof
+-- add_comm m n =
+--   induct m;
+--   auto [add, add_n_Z, add_m_Sn]
+-- | ]
