@@ -1,4 +1,3 @@
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -10,7 +9,9 @@ module Tactic.Core where
 
 import Control.Monad
 import qualified Data.List as List
-import Data.Map hiding (foldl, null)
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Maybe
 import Language.Haskell.TH
 import Language.Haskell.TH.Datatype
 import Language.Haskell.TH.Ppr (pprint)
@@ -29,13 +30,14 @@ data Core
       (Q Exp) -- target
       Name -- datatype
       Core
-  | Induct
+  | -- | only works on inductively-defined datatypes (e.g. not Int)
+    Induct
       (Q Exp) -- target
       Name -- datatype
       Int -- #argument
       Core
   | Application (Q Exp) (Q Exp) Core
-  | Auto Core
+  | Auto Ctx Int Core
   | Assertion (Q Exp) Core
   | Loop
       (Q Exp -> Q Exp) -- cond
@@ -51,137 +53,172 @@ buildCore ks = foldl (.) id ks Trivial
 
 type Ctx = Map Exp Type
 
+toCtx :: [(Q Exp, Q Type)] -> Q Ctx
+toCtx ls = Map.fromList <$> mapM (uncurry pairM) ls
+
 data Environment = Environment
   { ctx :: Ctx,
-    inds :: [(Name, Int)], -- inducted arguments: [(dtName, #argument)]
-    mu :: (Exp, Type), -- recursive
-    gas :: Int
+    -- | applicants available for each argument of a recursion.
+    -- length is the same as the number of parameters of `mu`
+    recCtxs :: [Maybe Ctx],
+    mu :: (Exp, Type) -- recursive
   }
 
-compileCoreE :: Core -> Environment -> Q Exp
-compileCoreE Trivial env = [|trivial|]
-compileCoreE (Expression eQ core) env = [|$eQ `by` $(compileCoreE core env)|]
-compileCoreE (Branch cond core) env = [|if $cond then $(compileCoreE core env) else $(compileCoreE core env)|]
-compileCoreE (Induct eQ dtName iArg core) env = do
-  -- remove induction target from ctx
+compileCoreE :: Environment -> Core -> Q Exp
+compileCoreE env Trivial = [|trivial|]
+compileCoreE env (Expression eQ core) = [|refinement $eQ &&& $(compileCoreE env core)|]
+compileCoreE env (Branch cond core) = [|if $cond then $(compileCoreE env core) else $(compileCoreE env core)|]
+compileCoreE env (Destruct eQ dtName core) = do
+  -- remove destruction target from ctx
   e <- eQ
-  let env1 = env {ctx = delete e $ ctx env}
-  -- add induction target to inds
-  let env2 = env {inds = (dtName, iArg) : inds env}
+  let env1 = env {ctx = Map.delete e $ ctx env}
   -- get datatype info
   dtInfo <- reifyDatatype dtName
   let dtConInfos = datatypeCons dtInfo
-  -- generate matches
+  -- gen matches
   let matchQs =
         fmap
           ( \conInfo -> do
               -- adds newly bound variables to ctx
               (ctx', pat) <- genConPat conInfo
-              let env3 = env {ctx = ctx env <> ctx'}
-              match (pure pat) (normalB $ compileCoreE core env3) []
+              -- add constructor's introduced terms to environment context
+              let env2 = env1 {ctx = ctx env <> ctx'}
+              -- gen match
+              match (pure pat) (normalB $ compileCoreE env2 core) []
           )
           dtConInfos
-  -- generate cases
+  -- generate case
   caseE (pure e) matchQs
-compileCoreE (Application fQ aQ core) env = [|$fQ $aQ `by` $(compileCoreE core env)|]
-compileCoreE (Assertion bQ core) env = [|if $bQ then $(compileCoreE core env) else trivial|]
-compileCoreE (Loop cond nexts aQ_init body gas) env =
+compileCoreE env (Induct eQ dtName iArg core) = do
+  -- remove induction target from ctx
+  e <- eQ
+  let env1 = env {ctx = Map.delete e $ ctx env}
+  -- get datatype info
+  dtInfo <- reifyDatatype dtName
+  let dtConInfos = datatypeCons dtInfo
+  -- gen matches
+  let matchQs =
+        fmap
+          ( \conInfo -> do
+              -- adds newly bound variables to ctx
+              (ctx', pat) <- genConPat conInfo
+              -- add constructor's introduced terms to recCtx at `iArg` (index of the inducted argument)
+              let env2 = env1 {recCtxs = updateAtList iArg (Just ctx') (recCtxs env1)}
+              -- add constructor's introduced terms to environment context
+              let env3 = env2 {ctx = ctx env <> ctx'}
+              -- gen match
+              match (pure pat) (normalB $ compileCoreE env3 core) []
+          )
+          dtConInfos
+  -- generate case
+  caseE (pure e) matchQs
+compileCoreE env (Application fQ aQ core) = [|refinement ($fQ $aQ) &&& $(compileCoreE env core)|]
+compileCoreE env (Assertion bQ core) = [|if $bQ then $(compileCoreE env core) else trivial|]
+compileCoreE env (Loop cond nexts aQ_init body gas) =
   let loop aQ gas =
         if gas == 0
           then [|trivial|]
           else
             let tail = foldl (\pQ aQ -> [|$(loop aQ (gas - 1)) &&& $pQ|]) [|trivial|] (nexts aQ)
-             in [|if $(cond aQ) then trivial else $(compileCoreE (body aQ) env) &&& $tail|]
+             in [|if $(cond aQ) then trivial else $(compileCoreE env (body aQ)) &&& $tail|]
    in loop aQ_init gas
-compileCoreE (Block cores) env = foldl (\pQ core -> [|$pQ &&& $(compileCoreE core env)|]) [|trivial|] cores
-compileCoreE (Auto core) env = [|$(forQs $ genAllNeutrals env) `by` $(compileCoreE core env)|]
+compileCoreE env (Block cores) = foldl (\pQ core -> [|$pQ &&& $(compileCoreE env core)|]) [|trivial|] cores
+compileCoreE env (Auto ctx' gas core) =
+  let env' = env {ctx = ctx env <> ctx'}
+   in [|refinement $(forQs $ genNeutrals env' Nothing gas) &&& $(compileCoreE env' core)|]
 
--- | generate all neutral forms in environement
-genAllNeutrals :: Environment -> Q [Exp]
-genAllNeutrals env = foldM f [] (toList $ ctx env)
-  where
-    f :: [Exp] -> (Exp, Type) -> Q [Exp]
-    f es (e, alpha) = do
-      (es <>) <$> genNeutrals env e alpha
+type Goal = Maybe Type
+
+matchesGoal :: Type -> Goal -> Bool
+matchesGoal alpha goal = maybe True (== alpha) goal
 
 -- | generate all neutral forms in environemnt that have type `goal`
-genAllNeutralsOfType :: Environment -> Type -> Q [Exp]
-genAllNeutralsOfType env goal = foldM f [] (toList $ ctx env)
+genNeutrals :: Environment -> Goal -> Int -> Q [Exp]
+genNeutrals env goal gas =
+  if gas == 0
+    then do
+      -- pure $! unsafePerformIO $ print $ indent env <> "[out of gas]"
+      pure []
+    else foldM f [] (Map.toList $ ctx env) <> genRecursions env goal gas
   where
     f :: [Exp] -> (Exp, Type) -> Q [Exp]
     f es (e, alpha) =
-      let (_, beta) = flattenType alpha
-       in -- only generate neutrals that have type `goal`
-          if beta == goal
-            then genNeutrals env e alpha
+      (es <>)
+        <$> let (_, beta) = flattenType alpha
+             in if matchesGoal beta goal
+                  then genApplications env e alpha gas
+                  else pure []
+
+-- | checks if it is consistent to make a recursive call in this context,  check there exists at least one Just in recCtxs
+canRecurse :: Environment -> Bool
+canRecurse env = List.foldl (\b mb_ctx -> b || isJust mb_ctx) False (recCtxs env)
+
+-- | generates
+genRecursions :: Environment -> Goal -> Int -> Q [Exp]
+genRecursions env goal gas =
+  if canRecurse env
+    then
+      let (r, rho) = mu env
+          (alphas, beta) = flattenType rho
+       in if matchesGoal beta goal
+            then
+              if List.null alphas
+                then error "impossible" -- must have at least one of the recCtxs be a Just
+                else do
+                  argss <-
+                    fanout
+                      <$> traverse
+                        ( \(alpha, recCtx) ->
+                            case recCtx of
+                              Just ctx -> genVariables env ctx alpha -- gen only from ctx
+                              Nothing -> genNeutrals env (Just alpha) (gas - 1) -- gen any neutral
+                        )
+                        (zip alphas (recCtxs env))
+                  let es = (foldl AppE r) <$> argss
+                  -- pure $! unsafePerformIO $ print $ indent env <> "[gen recs] " <> List.intercalate ", " (pprint <$> es)
+                  pure es
             else pure []
+    else pure []
 
--- | generate all neutral forms with applicant `e` of type `alpha`
-genNeutrals :: Environment -> Exp -> Type -> Q [Exp]
-genNeutrals env e alpha =
-  if gas env == 0
-    then do
-      pure $! unsafePerformIO $ print $ indent env <> "[out of gas]  " <> pprint e <> " : " <> pprint alpha
-      pure []
-    else
-      let (alphas, beta) = flattenType alpha
-       in if null alphas
+-- | generate all (full) applications of `e : alpha`
+genApplications :: Environment -> Exp -> Type -> Int -> Q [Exp]
+genApplications env e alpha gas =
+  let (alphas, beta) = flattenType alpha
+   in if List.null alphas
+        then do
+          pure [e]
+        else do
+          argss <- fanout <$> traverse (\alpha -> genNeutrals env alpha (gas - 1)) (Just <$> alphas)
+          let es = (foldl AppE e) <$> argss
+          if not $ List.null es
             then do
-              -- pure $! unsafePerformIO $ print $ indent env <> "[genNeutrals]  " <> pprint e <> " : " <> pprint alpha
-              pure $! unsafePerformIO $ print $ indent env <> "==> " <> pprint e
-              pure [e]
-            else
-              if e == fst (mu env)
-                then -- recursive call
-                do
-                  let ialphas = mapWithIndex (,) alphas
-                  ass <-
-                    traverse
-                      ( \(i, alpha) -> do
-                          env' <- do
-                            foldM
-                              ( \env (dtName, i') ->
-                                  if i == i'
-                                    then do
-                                      -- remove all constructors from ctx
-                                      dtInfo <- reifyDatatype dtName
-                                      let conInfos = datatypeCons dtInfo
-                                      let conNames = constructorName <$> conInfos
-                                      pure $ foldl (\env conName -> env {ctx = delete (VarE conName) $ ctx env}) env conNames
-                                    else pure env
-                              )
-                              env
-                              (inds env)
-                          genAllNeutralsOfType env' {gas = gas env - 1} alpha
-                      )
-                      ialphas
-                  let assRot = rotate ass
-                  es <- traverse (\as -> pure $ foldl AppE e as) assRot
-                  pure es
-                else -- nonrecursive call
-                do
-                  -- pure $! unsafePerformIO $ print $ indent env <> "[genNeutrals]  " <> pprint e <> " : " <> pprint alpha
-                  let env' = env {gas = gas env - 1}
-                  ass <- traverse (genAllNeutralsOfType env') alphas
-                  let assRot = rotate ass
-                  es <- traverse (\as -> pure $ foldl AppE e as) assRot
-                  pure $! unsafePerformIO $ print $ indent env <> "==> " <> List.intercalate ", " (pprint <$> es)
-                  pure es
+              -- pure $! unsafePerformIO $ print $ indent env <> "[gen apps] " <> List.intercalate ", " (pprint <$> es)
+              pure es
+            else pure es
 
-indent :: Environment -> String
-indent env = replicate (10 - gas env) ' '
+-- | generates any expressions directly from context (no applications) that have goal type
+genVariables :: Environment -> Ctx -> Type -> Q [Exp]
+genVariables env ctx goal = do
+  es <- foldM f [] (Map.toList ctx)
+  -- pure $! unsafePerformIO $ print $ indent env <> "[gen vars] " <> List.intercalate ", " (pprint <$> es)
+  pure es
+  where
+    f :: [Exp] -> (Exp, Type) -> Q [Exp]
+    f es (e, alpha) =
+      (es <>) <$> if alpha == goal then pure [e] else pure []
 
--- is this an actualy rotation?
--- [ [x1, x2], [y1, y2] ] ==> [ [x1, y1], [x1, y2], [x2, y1], [x2, y2] ]
-rotate :: [[a]] -> [[a]]
-rotate [] = []
-rotate (xs : []) = [[x] | x <- xs]
-rotate (xs : xss) = [x' : xs' | x' <- xs, xs' <- rotate xss]
+-- | for each list of the output, the ith element is from the ith list of the input.
+-- all lists must be of the same length.
+-- example: [ [x1, x2], [y1, y2] ] ==> [ [x1, y1], [x1, y2], [x2, y1], [x2, y2] ]
+fanout :: [[a]] -> [[a]]
+fanout [] = []
+fanout (xs : []) = [[a] | a <- xs]
+fanout (xs : xss) = [a' : xs' | a' <- xs, xs' <- fanout xss]
 
-byQs :: Q [Exp] -> Q Exp
-byQs eQs = do
+conjunctionQ :: Q [Exp] -> Q Exp
+conjunctionQ eQs = do
   es <- eQs
-  foldl (\eQ' e -> [|$eQ' `by` $(pure e)|]) [|trivial|] es
+  foldl (\eQ' e -> [|refinement $eQ' &&& $(pure e)|]) [|trivial|] es
 
 forQs :: Q [Exp] -> Q Exp
 forQs eQs = do
@@ -189,22 +226,27 @@ forQs eQs = do
   foldl (\eQ' e -> [|$eQ' `for` $(pure e)|]) [|trivial|] es
 
 -- | flattens a type of the form `alpha1 -> ... -> alphaN -> beta`
--- into the form `([alpha1, ..., alphaN], beta)
+-- into the form `([alpha1, ..., alphaN], beta)`.
 flattenType :: Type -> ([Type], Type)
 flattenType (AppT (AppT ArrowT alpha) beta) =
   let (alphas, delta) = flattenType beta
    in (alpha : alphas, delta)
 flattenType alpha = ([], alpha)
 
+unArrowType :: Type -> Maybe (Type, Type)
+unArrowType (AppT (AppT ArrowT alpha) beta) = Just (alpha, beta)
+unArrowType _ = Nothing
+
 flatten :: [[a]] -> [a]
 flatten = foldMap id
 
+-- generates context with constructor's introduced terms, and constructor's pattern
 genConPat :: ConstructorInfo -> Q (Ctx, Pat)
 genConPat conInfo = do
   let conName = constructorName conInfo
   let conFields = constructorFields conInfo
   names <- mapM (\type_ -> newName "x") conFields
-  let ctx = fromList $ fmap (\(name, type_) -> (VarE name, type_)) (zip names conFields)
+  let ctx = Map.fromList $ fmap (\(name, type_) -> (VarE name, type_)) (zip names conFields)
   let pat = ConP conName $ VarP <$> names
   pure (ctx, pat)
 
@@ -213,3 +255,17 @@ mapWithIndex f = go 0
   where
     go _ [] = []
     go i (x : xs) = f i x : go (i + 1) xs
+
+traverseWithIndex :: Monad m => (Int -> a -> m b) -> [a] -> m [b]
+traverseWithIndex k = go 0
+  where
+    go _ [] = pure []
+    go i (x : xs) = (:) <$> k i x <*> go (i + 1) xs
+
+updateAtList :: Int -> a -> [a] -> [a]
+updateAtList _ _ [] = []
+updateAtList 0 x' (x : xs) = x' : xs
+updateAtList i x' (_ : xs) = updateAtList (i - 1) x' xs
+
+pairM :: Applicative m => m a -> m b -> m (a, b)
+pairM ma mb = (,) <$> ma <*> mb

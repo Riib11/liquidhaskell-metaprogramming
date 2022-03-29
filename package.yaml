@@ -28,4 +28,4 @@ library:
   source-dirs: src
   ghc-options:
     - -fplugin=LiquidHaskell
-    - -ddump-splices
+    # - -ddump-splices

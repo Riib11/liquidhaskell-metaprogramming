@@ -7,13 +7,12 @@ type Proof = ()
 trivial :: Proof
 trivial = ()
 
-{-@ reflect by @-}
-by :: a -> Proof -> Proof
-by _ _ = trivial
+refinement :: a -> Proof
+refinement _ = trivial
 
-{-@ reflect con @-}
-con :: a -> Proof -> a
-con a _ = a
+{-@ reflect by @-}
+by :: a -> Proof -> a
+by a _ = a
 
 {-@ reflect for @-}
 for :: Proof -> a -> Proof
@@ -23,15 +22,7 @@ for _ _ = trivial
 (&&&) :: Proof -> Proof -> Proof
 p &&& q = p
 
-{-@ reflect with @-}
-with :: a -> b -> a
-with a _ = a
-
 infixl 5 `by`
-
-infixl 5 `con`
-
-infixl 5 `with`
 
 infixl 5 `for`
 

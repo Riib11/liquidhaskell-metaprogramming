@@ -35,6 +35,7 @@ library
       Tactic.Branch
       Tactic.Core
       Tactic.CoreOld
+      Tactic.CoreOld2
       Tactic.CoreTest
       Tactic.CoreTest2
       Tactic.Flat
@@ -49,7 +50,7 @@ library
       Paths_liquidhaskell_metaprogramming
   hs-source-dirs:
       src
-  ghc-options: -fplugin=LiquidHaskell -ddump-splices
+  ghc-options: -fplugin=LiquidHaskell
   build-depends:
       containers
     , haskell-src-meta
