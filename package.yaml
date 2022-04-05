@@ -23,6 +23,8 @@ dependencies:
   - haskell-src-meta
   - th-abstraction
   - containers
+  - mtl
+  - transformers
 
 library:
   source-dirs: src

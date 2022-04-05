@@ -14,9 +14,9 @@ refinement _ = trivial
 by :: a -> Proof -> a
 by a _ = a
 
-{-@ reflect for @-}
-for :: Proof -> a -> Proof
-for _ _ = trivial
+{-@ reflect use @-}
+use :: Proof -> a -> Proof
+use _ _ = trivial
 
 {-@ reflect &&& @-}
 (&&&) :: Proof -> Proof -> Proof
@@ -24,7 +24,7 @@ p &&& q = p
 
 infixl 5 `by`
 
-infixl 5 `for`
+infixl 5 `use`
 
 infixl 4 ===
 
