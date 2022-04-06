@@ -15,8 +15,8 @@ by :: a -> Proof -> a
 by a _ = a
 
 {-@ reflect use @-}
-use :: Proof -> a -> Proof
-use _ _ = trivial
+use :: a -> Proof
+use _ = trivial
 
 {-@ reflect &&& @-}
 (&&&) :: Proof -> Proof -> Proof

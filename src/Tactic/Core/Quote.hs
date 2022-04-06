@@ -6,11 +6,13 @@
 
 module Tactic.Core.Quote where
 
+import Control.Monad.Trans.State
 import Language.Haskell.TH
 import Language.Haskell.TH.Datatype
 import Language.Haskell.TH.Ppr (pprint)
 import qualified Language.Haskell.TH.Quote as Quote
 import Language.Haskell.TH.Syntax
+import System.IO.Unsafe (unsafePerformIO)
 import Tactic.Core.Parse
 import Tactic.Core.Splice
 import Tactic.Core.Syntax
@@ -25,13 +27,15 @@ tactic =
     }
 
 quoteExp :: String -> Q Exp
-quoteExp str =
-  case parseExpInstrs str of
-    Right instrs -> spliceExp emptyEnvironment instrs
-    Left msg -> fail msg
+quoteExp str = do
+  instrs <- runParser parseInstrs str
+  evalStateT (spliceExp instrs) emptyEnvironment
 
 quoteDec :: String -> Q [Dec]
-quoteDec str =
-  case parseDecInstrs str of
-    Right (env, instrs) -> spliceDec env instrs
-    Left msg -> fail msg
+quoteDec str = do
+  (env, instrs) <- runParser parseDecInstrs str
+  return $! unsafePerformIO $ putStrLn $ "instrs: " ++ show instrs
+  return $! unsafePerformIO $ putStrLn $ "env: " ++ show env
+  decs <- evalStateT (spliceDec instrs) env
+  return $! unsafePerformIO $ putStrLn $ "====================================="
+  pure decs

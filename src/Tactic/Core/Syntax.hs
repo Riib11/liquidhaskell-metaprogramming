@@ -21,7 +21,7 @@ data Instr
   | -- | inducts on an input argument
     Induct {name :: Name}
   | -- | auto
-    Auto {hints :: [Name], depth :: Int}
+    Auto {hints :: [Exp], depth :: Int}
   | -- | asserts a boolean exp must be true
     Assert {exp :: Exp}
   | -- | use refinment of an exp
@@ -30,33 +30,55 @@ data Instr
     Trivial
   deriving (Show)
 
-type Ctx = Map Name Type
+type Ctx = Map Exp Type
 
 data Environment = Environment
   { def_name :: Name,
     def_type :: Type,
     def_argTypes :: [Type],
     def_argNames :: [Name],
-    goal_arg_i :: Int,
-    arg_rec_ctx :: Map Name Ctx, -- recursive-allowed context for each arg
+    arg_i :: Int,
+    args_rec_ctx :: Map Int Ctx, -- recursive-allowed context for each arg
     ctx :: Ctx
   }
   deriving (Show)
 
 introArg :: Name -> Type -> Environment -> Environment
-introArg = undefined
+introArg name type_ env =
+  env
+    { def_argNames = def_argNames env ++ [name],
+      def_argTypes = def_argTypes env ++ [type_],
+      ctx = Map.insert (VarE name) type_ $ ctx env
+    }
 
-insertCtx :: Name -> Type -> Environment -> Environment
-insertCtx = undefined
+insertCtx :: Exp -> Type -> Environment -> Environment
+insertCtx e type_ env =
+  env
+    { ctx = Map.insert e type_ $ ctx env
+    }
 
-deleteCtx :: Name -> Environment -> Environment
-deleteCtx = undefined
+deleteCtx :: Exp -> Environment -> Environment
+deleteCtx e env =
+  env
+    { ctx = Map.delete e $ ctx env
+    }
 
 emptyEnvironment :: Environment
-emptyEnvironment = undefined
+emptyEnvironment =
+  Environment
+    { def_name = undefined,
+      def_type = undefined,
+      def_argTypes = [],
+      def_argNames = [],
+      arg_i = 0,
+      args_rec_ctx = Map.empty,
+      ctx = Map.empty
+    }
 
-inferType :: Name -> Environment -> Q Type
-inferType name env =
-  case Map.lookup name (ctx env) of
+inferType :: Exp -> Environment -> Q Type
+inferType e env =
+  case Map.lookup e (ctx env) of
     Just type_ -> pure type_
-    Nothing -> reifyType name
+    Nothing -> case e of
+      VarE name -> reifyType name
+      ConE name -> reifyType name

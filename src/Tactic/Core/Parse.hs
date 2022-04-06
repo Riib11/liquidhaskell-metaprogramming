@@ -9,12 +9,14 @@
 module Tactic.Core.Parse where
 
 import Control.Monad.Trans as Trans
+import Data.Char as Char
 import qualified Language.Haskell.Meta.Parse as MP
 import Language.Haskell.TH
 import Language.Haskell.TH.Datatype
 import Language.Haskell.TH.Ppr (pprint)
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax hiding (lift)
+import System.IO.Unsafe (unsafePerformIO)
 import Tactic.Core.Syntax
 import Tactic.Core.Utility
 import qualified Text.Parsec as P
@@ -30,60 +32,68 @@ runParser p str =
 
 parseInstrs :: Parser [Instr]
 parseInstrs =
-  P.sepBy
-    parseInstr
-    (parseSymbol ";")
+  concat
+    <$> P.sepBy
+      parseInstr
+      (parseSymbol ";")
 
-parseInstr :: Parser Instr
+parseInstr :: Parser [Instr]
 parseInstr =
-  P.choice
+  P.choice . fmap P.try $
     [ -- Intro
       do
         parseSymbol "intro"
         name <- parseName
-        pure $ Intro {name},
+        pure [Intro {name}],
       -- Destruct
       do
         parseSymbol "destruct"
         name <- parseName
-        pure $ Destruct {name},
+        pure [Destruct {name}],
       -- Induct
       do
         parseSymbol "induct"
         name <- parseName
-        pure $ Induct {name},
+        pure [Induct {name}],
       -- Auto
       do
         parseSymbol "auto"
         parseSymbol "["
-        hints <- P.sepBy parseName (parseSymbol ",")
+        hints <- fmap nameToExp <$> P.sepBy parseName (parseSymbol ",")
         parseSymbol "]"
         depth <- parseInt
-        pure $ Auto {hints, depth},
+        pure [Auto {hints, depth}],
       -- Assert
       do
         parseSymbol "assert"
         exp <- parseExp
-        pure $ Assert {exp},
+        pure [Assert {exp}],
       -- Use
       do
         parseSymbol "use"
         exp <- parseExp
-        pure $ Use {exp},
+        pure [Use {exp}],
       -- Trivial
       do
         parseSymbol "trivial"
-        pure $ Trivial
+        pure [Trivial],
+      -- comment
+      do
+        P.spaces
+        P.string "--"
+        P.manyTill P.anyChar (P.try P.newline)
+        pure []
     ]
 
 parseDecInstrs :: Parser (Environment, [Instr])
 parseDecInstrs = do
   -- sig
+  P.spaces
   def_name <- parseName
   P.string "::"
   P.many $ P.char ' '
   def_type_string <- parseUntil parseNextIsNewline
-  def_type <- toParser $ MP.parseType def_type_string
+  def_type <- fromMP $ MP.parseType def_type_string
   let (def_argTypes, _) = flattenType def_type
   -- imp
   _ <- parseName -- == def_name
@@ -100,10 +110,10 @@ parseDecInstrs = do
         ++ instrs
     )
 
-toParser :: Either String a -> Parser a
-toParser e = case e of
+fromMP :: Either String a -> Parser a
+fromMP e = case e of
   Right a -> pure a
-  Left msg -> fail msg
+  Left msg -> fail $ "metaparse: " ++ msg
 
 lexeme :: Parser a -> Parser a
 lexeme p = do
@@ -129,8 +139,13 @@ parseInt = lexeme do
 
 parseExp :: Parser Exp
 parseExp = do
-  str <- P.between (parseSymbol "{") (P.many P.anyChar) (parseSymbol "}")
-  toParser (MP.parseExp str)
+  rest <- lookAheadRest
+  -- return $! unsafePerformIO (putStrLn $ "[!] parseExp: " ++ rest)
+  -- str <- P.between (parseSymbol "{") (parseSymbol "}") (P.many1 P.anyChar)
+  parseSymbol "{"
+  str <- P.manyTill P.anyChar (P.try (parseSymbol "}"))
+  return $! unsafePerformIO (putStrLn $ "[!] str: " ++ str)
+  fromMP (MP.parseExp str)
 
 parseNextIsNewline :: Parser Bool
 parseNextIsNewline = do
@@ -148,3 +163,14 @@ parseUntil p = lexeme go
         else do
           c <- P.anyChar
           (c :) <$> go
+
+lookAheadRest :: Parser String
+lookAheadRest = P.lookAhead (P.many P.anyChar)
+
+nameToExp :: Name -> Exp
+nameToExp name =
+  case nameBase name of
+    (c : s) ->
+      if Char.isLower c
+        then VarE name
+        else ConE name
