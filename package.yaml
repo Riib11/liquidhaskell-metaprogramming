@@ -19,15 +19,19 @@ dependencies:
   - liquidhaskell == 0.8.10.7
   - liquid-base == 4.15.0.0
   - template-haskell == 2.17.0.0
-  - parsec == 3.1.14.0
+  # - template-haskell == 2.16.0.0 # causes build error
+  - parsec
   - haskell-src-meta
   - th-abstraction
   - containers
   - mtl
   - transformers
+  - process
 
 library:
   source-dirs: src
   ghc-options:
     - -fplugin=LiquidHaskell
+    # - -fplugin-opt=LiquidHaskell:--reflection
+    # - -fplugin-opt=LiquidHaskell:--ple-local
     # - -ddump-splices

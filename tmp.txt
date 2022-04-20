@@ -1,0 +1,196 @@
+liquidhaskell-metaprogramming-0.1.0.0: unregistering (local file changes: README.md liquidhaskell-metaprogramming.cabal package.yaml src/Proof.hs src/Tactic/Core/Debug.hs ...)
+liquidhaskell-metaprogramming> configure (lib)
+Configuring liquidhaskell-metaprogramming-0.1.0.0...
+liquidhaskell-metaprogramming> build (lib)
+Preprocessing library for liquidhaskell-metaprogramming-0.1.0.0..
+Building library for liquidhaskell-metaprogramming-0.1.0.0..
+[ 1 of 14] Compiling Paths_liquidhaskell_metaprogramming
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[ 2 of 14] Compiling Proof
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[ 3 of 14] Compiling Tactic.Core.Debug
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[ 4 of 14] Compiling Tactic.Core.Syntax
+WARNING: (src/Tactic/Core/Syntax.hs:(82,16)-(84,33)) Expanding DEFAULT with 27 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[ 5 of 14] Compiling Tactic.Core.Utility
+WARNING: (src/Tactic/Core/Utility.hs:(12,1)-(19,31)) Expanding DEFAULT with 25 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+WARNING: (src/Tactic/Core/Utility.hs:(12,1)-(19,31)) Expanding DEFAULT with 25 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+WARNING: (src/Tactic/Core/Utility.hs:(12,1)-(19,31)) Expanding DEFAULT with 24 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+WARNING: (src/Tactic/Core/Utility.hs:(12,1)-(19,31)) Expanding DEFAULT with 25 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+WARNING: (src/Tactic/Core/Utility.hs:(12,1)-(19,31)) Expanding DEFAULT with 25 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+WARNING: (src/Tactic/Core/Utility.hs:(23,1)-(25,29)) Expanding DEFAULT with 24 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+WARNING: (src/Tactic/Core/Utility.hs:(23,1)-(25,29)) Expanding DEFAULT with 25 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+WARNING: (src/Tactic/Core/Utility.hs:(23,1)-(25,29)) Expanding DEFAULT with 25 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+WARNING: (src/Tactic/Core/Utility.hs:(28,1)-(32,20)) Expanding DEFAULT with 25 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[ 6 of 14] Compiling Tactic.Core.Splice
+WARNING: (src/Tactic/Core/Splice.hs:(48,3)-(73,89)) Expanding DEFAULT with 25 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+WARNING: (src/Tactic/Core/Splice.hs:(76,3)-(104,87)) Expanding DEFAULT with 25 cases at depth 1
+Disable expansion with --max-case-expand=0
+
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[ 7 of 14] Compiling Tactic.Core.Parse
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[ 8 of 14] Compiling Tactic.Core.Quote
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[ 9 of 14] Compiling Tactic.Prune
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[10 of 14] Compiling Tactic.ReadLH
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[11 of 14] Compiling Tactic.ReadTH
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[12 of 14] Compiling Tactic.Test.Test1
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test1.hs:29:1-9: Splicing declarations
+    return [] ======>
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test1.hs:29:1-9: Splicing declarations
+    return [] ======>
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[13 of 14] Compiling Tactic.Test.Test2
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test2.hs:51:1-9: Splicing declarations
+    return [] ======>
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test2.hs:51:1-9: Splicing declarations
+    return [] ======>
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+[14 of 14] Compiling Tactic.Test.Test3
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:26:1-9: Splicing declarations
+    return [] ======>
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:(31,9)-(35,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tactic
+      "\n\
+      \test1 :: N -> Proof \n\
+      \test1 x = \n\
+      \    auto [add] 2\n"
+  ======>
+    test1 :: N -> Proof
+    test1 = \ x -> ((use ((add x) x) &&& use x) &&& trivial)
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:(40,9)-(44,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tactic
+      "\n\
+      \test2 :: N -> N -> Proof \n\
+      \test2 x y =\n\
+      \    auto [add] 2\n"
+  ======>
+    test2 :: N -> N -> Proof
+    test2
+      = \ x
+          -> \ y
+               -> ((use ((add x) x)
+                      &&&
+                        (use ((add x) y)
+                           &&& (use ((add y) x) &&& (use ((add y) y) &&& (use x &&& use y)))))
+                     &&& trivial)
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:26:1-9: Splicing declarations
+    return [] ======>
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:(31,9)-(35,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tactic
+      "\n\
+      \test1 :: N -> Proof \n\
+      \test1 x = \n\
+      \    auto [add] 2\n"
+  ======>
+    test1 :: N -> Proof
+    test1 = \ x -> ((use ((add x) x) &&& use x) &&& trivial)
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:(40,9)-(44,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tactic
+      "\n\
+      \test2 :: N -> N -> Proof \n\
+      \test2 x y =\n\
+      \    auto [add] 2\n"
+  ======>
+    test2 :: N -> N -> Proof
+    test2
+      = \ x
+          -> \ y
+               -> ((use ((add x) x)
+                      &&&
+                        (use ((add x) y)
+                           &&& (use ((add y) x) &&& (use ((add y) y) &&& (use x &&& use y)))))
+                     &&& trivial)
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+
+liquidhaskell-metaprogramming> copy/register
+Installing library in /Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/.stack-work/install/x86_64-osx/acd2303856865d21e02285423c3018c90c2f1297ee6168b51c3506b2fe985aac/9.0.1/lib/x86_64-osx-ghc-9.0.1/liquidhaskell-metaprogramming-0.1.0.0-DNHcbX2hcYD4wEEBFpqnNV
+Registering library for liquidhaskell-metaprogramming-0.1.0.0..

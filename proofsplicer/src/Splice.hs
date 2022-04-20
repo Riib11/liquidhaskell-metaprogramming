@@ -6,7 +6,7 @@
 
 {-@ LIQUID "--compile-spec" @-}
 
-module Tactic.Core.Splice where
+module Splice where
 
 import Control.Monad
 import Control.Monad.Trans as Trans
@@ -20,9 +20,9 @@ import Language.Haskell.TH.Ppr (pprint)
 import qualified Language.Haskell.TH.Quote as Quote
 import Language.Haskell.TH.Syntax hiding (lift)
 import Proof
-import Tactic.Core.Debug
-import Tactic.Core.Syntax
-import Tactic.Core.Utility
+import Debug
+import Syntax
+import Utility
 import Prelude hiding (exp)
 
 _DUMP_AUTO = True
@@ -155,19 +155,18 @@ genNeutrals goal gas = do
                     then genNeutrals' e alpha gas
                     else pure []
   es <- (<>) <$> foldM f [] vars <*> genRecursions goal gas
+  debugM $ "genNeutrals.es: " ++ pprint es
   pure es
 
 genNeutrals' :: Exp -> Type -> Gas -> StateT Environment Q [Exp]
 genNeutrals' e type_ gas = do
   let (alphas, beta) = flattenType type_
-  es <- if List.null alphas
-          then pure [e]
-          else do
-            argss <- fanout <$> traverse (\alpha -> genNeutrals (Just alpha) (gas - 1)) alphas
-            let es = foldl AppE e <$> argss
-            pure es
-  debugM $ "genNeutrals' (" ++ pprint e ++ ") (" ++ pprint type_ ++ ") " ++ show gas ++ " = " ++ show (pprint <$> es)
-  pure es
+  if List.null alphas
+    then pure [e]
+    else do
+      argss <- fanout <$> traverse (\alpha -> genNeutrals (Just alpha) (gas - 1)) alphas
+      let es = foldl AppE e <$> argss
+      pure es
 
 -- | generates any expressions directly from context (no applications) that have goal type
 genAtomsFromCtx :: Ctx -> Type -> Splice [Exp]
@@ -205,7 +204,7 @@ genRecursions goal gas = do
     False -> pure []
 
 canRecurse :: Splice Bool
-canRecurse = not . Map.null <$> gets args_rec_ctx
+canRecurse = not . Map.null <$> gets ctx
 
 matchesGoal :: Type -> Goal -> Bool
 matchesGoal type_ goal = maybe True (`compareTypes` type_) goal

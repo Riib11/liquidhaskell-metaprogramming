@@ -24,34 +24,19 @@ source-repository head
 
 library
   exposed-modules:
-      DSL.Equivalence
-      Foo
       Proof
-      RecursionPrinciple
-      RecursionPrincipleTest
-      Tactic
-      Tactic.Auto
-      Tactic.AutoTest
-      Tactic.Branch
-      Tactic.Core
+      Tactic.Core.Debug
       Tactic.Core.Parse
       Tactic.Core.Quote
       Tactic.Core.Splice
       Tactic.Core.Syntax
       Tactic.Core.Utility
-      Tactic.CoreOld
-      Tactic.CoreOld2
-      Tactic.CoreTest
-      Tactic.CoreTest2
-      Tactic.CoreTest3
-      Tactic.Flat
-      Tactic.Prototype1
-      Tactic.Repeat
-      Tactic.Tactic
-      Tactic.Test
-      Tactic.TestTH
-      Test
-      TH
+      Tactic.Prune
+      Tactic.ReadLH
+      Tactic.ReadTH
+      Tactic.Test.Test1
+      Tactic.Test.Test2
+      Tactic.Test.Test3
   other-modules:
       Paths_liquidhaskell_metaprogramming
   hs-source-dirs:
@@ -63,7 +48,8 @@ library
     , liquid-base ==4.15.0.0
     , liquidhaskell ==0.8.10.7
     , mtl
-    , parsec ==3.1.14.0
+    , parsec
+    , process
     , template-haskell ==2.17.0.0
     , th-abstraction
     , transformers

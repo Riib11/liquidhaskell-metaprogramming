@@ -6,7 +6,7 @@
 
 {-@ LIQUID "--compile-spec" @-}
 
-module Tactic.Core.Parse where
+module Parse where
 
 import Control.Monad.Trans as Trans
 import Data.Char as Char
@@ -16,9 +16,9 @@ import Language.Haskell.TH.Datatype
 import Language.Haskell.TH.Ppr (pprint)
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax hiding (lift)
-import Tactic.Core.Debug
-import Tactic.Core.Syntax
-import Tactic.Core.Utility
+import Debug
+import Syntax
+import Utility
 import qualified Text.Parsec as P
 import Prelude hiding (exp)
 

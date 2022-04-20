@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Tactic.Core.Utility where
+module Utility where
 
 {-@ LIQUID "--compile-spec" @-}
 
@@ -12,7 +12,8 @@ flattenType :: Type -> ([Type], Type)
 flattenType (AppT (AppT ArrowT alpha) beta) =
   let (alphas, delta) = flattenType beta
    in (alpha : alphas, delta)
-flattenType (AppT (AppT (AppT MulArrowT (PromotedT n)) alpha) beta) =
+-- flattenType (AppT (AppT (AppT MulArrowT (PromotedT n)) alpha) beta) =
+flattenType (AppT (AppT (AppT ArrowT (PromotedT n)) alpha) beta) =
   -- TODO: only works when `n` is `GHC.Types.One`
   let (alphas, delta) = flattenType beta
    in (alpha : alphas, delta)
@@ -46,6 +47,5 @@ fanout (xs : xss) = [a' : xs' | a' <- xs, xs' <- fanout xss]
 
 -- useMany [e1, e2, e3] == [|use e1 &&&& use e2 &&& use e3|]
 useMany :: [Exp] -> Q Exp
-useMany [] = [|trivial|]
 useMany [e] = [|use $(pure e)|]
 useMany (e : es) = [|use $(pure e) &&& $(useMany es)|]

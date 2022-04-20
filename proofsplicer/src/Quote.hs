@@ -4,7 +4,7 @@
 
 {-@ LIQUID "--compile-spec" @-}
 
-module Tactic.Core.Quote where
+module Quote where
 
 import Control.Monad.Trans.State
 import Language.Haskell.TH
@@ -12,10 +12,10 @@ import Language.Haskell.TH.Datatype
 import Language.Haskell.TH.Ppr (pprint)
 import qualified Language.Haskell.TH.Quote as Quote
 import Language.Haskell.TH.Syntax
-import Tactic.Core.Debug
-import Tactic.Core.Parse
-import Tactic.Core.Splice
-import Tactic.Core.Syntax
+import Debug
+import Parse
+import Splice
+import Syntax
 
 tactic :: Quote.QuasiQuoter
 tactic =

@@ -1,0 +1,29 @@
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:26:1-9: Splicing declarations
+    return [] ======>
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:(31,9)-(35,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tactic
+      "\n\
+      \test1 :: N -> Proof \n\
+      \test1 x = \n\
+      \    auto [add] 2\n"
+  ======>
+    test1 :: N -> Proof
+    test1 = \ x -> ((use ((add x) x) &&& use x) &&& trivial)
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:(40,9)-(44,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tactic
+      "\n\
+      \test2 :: N -> N -> Proof \n\
+      \test2 x y =\n\
+      \    auto [add] 2\n"
+  ======>
+    test2 :: N -> N -> Proof
+    test2
+      = \ x
+          -> \ y
+               -> ((use ((add x) x)
+                      &&&
+                        (use ((add x) y)
+                           &&& (use ((add y) x) &&& (use ((add y) y) &&& (use x &&& use y)))))
+                     &&& trivial)
