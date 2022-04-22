@@ -35,6 +35,7 @@ library
       Tactic.Test.Test2
       Tactic.Test.Test3
       Tactic.Test.Test4
+      Tactic.Test.Test5
   other-modules:
       Paths_liquidhaskell_metaprogramming
   hs-source-dirs:
@@ -73,6 +74,7 @@ executable liquidhaskell-metaprogramming
       Tactic.Test.Test2
       Tactic.Test.Test3
       Tactic.Test.Test4
+      Tactic.Test.Test5
       Paths_liquidhaskell_metaprogramming
   hs-source-dirs:
       app

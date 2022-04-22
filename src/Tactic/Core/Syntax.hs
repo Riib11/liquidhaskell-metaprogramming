@@ -12,6 +12,8 @@ import Language.Haskell.TH.Datatype
 import Language.Haskell.TH.Ppr (pprint)
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax
+import System.IO.Unsafe (unsafePerformIO)
+import Tactic.Core.Debug
 
 data Instr
   = -- | splices a lambda; adds name to environment
@@ -41,7 +43,18 @@ data Environment = Environment
     args_rec_ctx :: Map Int Ctx, -- recursive-allowed context for each arg
     ctx :: Ctx
   }
-  deriving (Show)
+
+instance Show Environment where
+  show env =
+    unlines
+      [ "def_name: " ++ show (def_name env),
+        "def_type: " ++ show (def_type env),
+        "def_argTypes: " ++ show (def_argTypes env),
+        "def_argNames: " ++ show (def_argNames env),
+        "arg_i: " ++ show (arg_i env),
+        "args_rec_ctx: " ++ show (args_rec_ctx env),
+        "ctx: " ++ show (ctx env)
+      ]
 
 introArg :: Name -> Type -> Environment -> Environment
 introArg name type_ env =
@@ -76,9 +89,16 @@ emptyEnvironment =
     }
 
 inferType :: Exp -> Environment -> Q Type
-inferType e env =
+inferType e env = do
   case Map.lookup e (ctx env) of
     Just type_ -> pure type_
     Nothing -> case e of
-      VarE name -> reifyType name
+      VarE name -> do 
+        -- return $! unsafePerformIO (print env)
+        -- return $! unsafePerformIO (putStrLn "")
+        debugM ""
+        debugM $ "inferType of " ++ show e
+        debugM ""
+        reifyType name
+
       ConE name -> reifyType name

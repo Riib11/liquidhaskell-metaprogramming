@@ -7,7 +7,7 @@ module Tactic.Core.Debug where
 import Control.Monad
 import System.IO.Unsafe (unsafePerformIO)
 
-_DEBUG = False
+_DEBUG = True
 
 debug :: String -> ()
 debug msg =
