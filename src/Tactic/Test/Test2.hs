@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 
+{-@ LIQUID "--compile-spec" @-}
 {-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--ple-local" @-}
 {-@ LIQUID "--short-names" @-}

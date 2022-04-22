@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 
+-- {-@ LIQUID "--compile-spec" @-}
 {-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--ple-local" @-}
 {-@ LIQUID "--short-names" @-}
@@ -52,6 +53,7 @@ add_n_Z n =
 
 return []
 
+{-@ automatic-instances add_comm @-}
 {-@
 add_comm :: m:N -> n:N -> {add m n == add n m}
 @-}
@@ -61,5 +63,3 @@ add_comm m n =
   induct m;
   auto [Z, S, add, add_n_Z, add_m_Sn] 2
 |]
-
-

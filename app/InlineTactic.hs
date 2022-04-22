@@ -1,5 +1,7 @@
 {-# LANGUAGE BlockArguments #-}
 
+{-@ LIQUID "--compile-spec" @-}
+
 module InlineTactic where
 
 import Building

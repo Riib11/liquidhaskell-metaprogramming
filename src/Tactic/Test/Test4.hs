@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 
+-- {-@ LIQUID "--compile-spec" @-}
 {-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--ple-local" @-}
 {-@ LIQUID "--short-names" @-}
@@ -121,6 +122,7 @@ add_n_Z
 
 return []
 
+{-@ automatic-instances add_comm @-}
 {-@
 add_comm :: m:N -> n:N -> {add m n == add n m}
 @-}
@@ -262,5 +264,3 @@ add_comm
                                                                                                                                                                             Z))))))))))))))))))))))))))))))
                         &&& trivial)
 -- %tactic:end:add_comm
-
-

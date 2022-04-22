@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+{-@ LIQUID "--compile-spec" @-}
 {-@ LIQUID "--reflection" @-}
 
 module Tactic.Test.Test3 where
