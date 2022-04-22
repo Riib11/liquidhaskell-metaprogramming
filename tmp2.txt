@@ -1,29 +1,148 @@
-/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:26:1-9: Splicing declarations
+liquidhaskell-metaprogramming-0.1.0.0: unregistering (local file changes: src/Tactic/Test/Test1.hs)
+liquidhaskell-metaprogramming> build (lib)
+Preprocessing library for liquidhaskell-metaprogramming-0.1.0.0..
+Building library for liquidhaskell-metaprogramming-0.1.0.0..
+[15 of 15] Compiling Tactic.Test.Test1
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test1.hs:29:1-9: Splicing declarations
     return [] ======>
-/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:(31,9)-(35,2): Splicing declarations
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test1.hs:(35,9)-(40,2): Splicing declarations
     Language.Haskell.TH.Quote.quoteDec
       tactic
       "\n\
-      \test1 :: N -> Proof \n\
-      \test1 x = \n\
-      \    auto [add] 2\n"
+      \add_m_Sn :: N -> N -> Proof\n\
+      \add_m_Sn m n =\n\
+      \  induct m;\n\
+      \  auto [Z, S] 3\n"
   ======>
-    test1 :: N -> Proof
-    test1 = \ x -> ((use ((add x) x) &&& use x) &&& trivial)
-/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test3.hs:(40,9)-(44,2): Splicing declarations
+    add_m_Sn :: N -> N -> Proof
+    add_m_Sn
+      = \ m
+          -> \ n
+               -> case m of
+                    Z -> ((use n
+                             &&&
+                               (use (S n)
+                                  &&&
+                                    (use (S (S n)) &&& (use (S (S Z)) &&& (use (S Z) &&& use Z)))))
+                            &&& trivial)
+                    S n_a56k
+                      -> ((use n
+                             &&&
+                               (use n_a56k
+                                  &&&
+                                    (use (S n)
+                                       &&&
+                                         (use (S n_a56k)
+                                            &&&
+                                              (use (S (S n))
+                                                 &&&
+                                                   (use (S (S n_a56k))
+                                                      &&&
+                                                        (use (S (S Z))
+                                                           &&&
+                                                             (use (S Z)
+                                                                &&&
+                                                                  (use Z
+                                                                     &&&
+                                                                       (use ((add_m_Sn n_a56k) n)
+                                                                          &&&
+                                                                            (use
+                                                                               ((add_m_Sn n_a56k)
+                                                                                  n_a56k)
+                                                                               &&&
+                                                                                 (use
+                                                                                    ((add_m_Sn
+                                                                                        n_a56k)
+                                                                                       (S n))
+                                                                                    &&&
+                                                                                      (use
+                                                                                         ((add_m_Sn
+                                                                                             n_a56k)
+                                                                                            (S n_a56k))
+                                                                                         &&&
+                                                                                           (use
+                                                                                              ((add_m_Sn
+                                                                                                  n_a56k)
+                                                                                                 (S Z))
+                                                                                              &&&
+                                                                                                use
+                                                                                                  ((add_m_Sn
+                                                                                                      n_a56k)
+                                                                                                     Z)))))))))))))))
+                            &&& trivial)
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test1.hs:29:1-9: Splicing declarations
+    return [] ======>
+/Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/src/Tactic/Test/Test1.hs:(35,9)-(40,2): Splicing declarations
     Language.Haskell.TH.Quote.quoteDec
       tactic
       "\n\
-      \test2 :: N -> N -> Proof \n\
-      \test2 x y =\n\
-      \    auto [add] 2\n"
+      \add_m_Sn :: N -> N -> Proof\n\
+      \add_m_Sn m n =\n\
+      \  induct m;\n\
+      \  auto [Z, S] 3\n"
   ======>
-    test2 :: N -> N -> Proof
-    test2
-      = \ x
-          -> \ y
-               -> ((use ((add x) x)
-                      &&&
-                        (use ((add x) y)
-                           &&& (use ((add y) x) &&& (use ((add y) y) &&& (use x &&& use y)))))
-                     &&& trivial)
+    add_m_Sn :: N -> N -> Proof
+    add_m_Sn
+      = \ m
+          -> \ n
+               -> case m of
+                    Z -> ((use n
+                             &&&
+                               (use (S n)
+                                  &&&
+                                    (use (S (S n)) &&& (use (S (S Z)) &&& (use (S Z) &&& use Z)))))
+                            &&& trivial)
+                    S n_a58u
+                      -> ((use n
+                             &&&
+                               (use n_a58u
+                                  &&&
+                                    (use (S n)
+                                       &&&
+                                         (use (S n_a58u)
+                                            &&&
+                                              (use (S (S n))
+                                                 &&&
+                                                   (use (S (S n_a58u))
+                                                      &&&
+                                                        (use (S (S Z))
+                                                           &&&
+                                                             (use (S Z)
+                                                                &&&
+                                                                  (use Z
+                                                                     &&&
+                                                                       (use ((add_m_Sn n_a58u) n)
+                                                                          &&&
+                                                                            (use
+                                                                               ((add_m_Sn n_a58u)
+                                                                                  n_a58u)
+                                                                               &&&
+                                                                                 (use
+                                                                                    ((add_m_Sn
+                                                                                        n_a58u)
+                                                                                       (S n))
+                                                                                    &&&
+                                                                                      (use
+                                                                                         ((add_m_Sn
+                                                                                             n_a58u)
+                                                                                            (S n_a58u))
+                                                                                         &&&
+                                                                                           (use
+                                                                                              ((add_m_Sn
+                                                                                                  n_a58u)
+                                                                                                 (S Z))
+                                                                                              &&&
+                                                                                                use
+                                                                                                  ((add_m_Sn
+                                                                                                      n_a58u)
+                                                                                                     Z)))))))))))))))
+                            &&& trivial)
+
+**** DONE:  Only compiling specifications [skipping verification] **************
+ 
+
+**** LIQUID: SAFE (0 constraints checked) **************************************
+
+liquidhaskell-metaprogramming> copy/register
+Installing library in /Users/henry/Documents/Research/LiquidHaskell/liquidhaskell-metaprogramming/.stack-work/install/x86_64-osx/acd2303856865d21e02285423c3018c90c2f1297ee6168b51c3506b2fe985aac/9.0.1/lib/x86_64-osx-ghc-9.0.1/liquidhaskell-metaprogramming-0.1.0.0-DNHcbX2hcYD4wEEBFpqnNV
+Registering library for liquidhaskell-metaprogramming-0.1.0.0..

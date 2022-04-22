@@ -31,17 +31,52 @@ library
       Tactic.Core.Splice
       Tactic.Core.Syntax
       Tactic.Core.Utility
-      Tactic.Prune
-      Tactic.ReadLH
-      Tactic.ReadTH
       Tactic.Test.Test1
       Tactic.Test.Test2
       Tactic.Test.Test3
+      Tactic.Test.Test4
   other-modules:
       Paths_liquidhaskell_metaprogramming
   hs-source-dirs:
       src
-  ghc-options: -fplugin=LiquidHaskell
+  build-depends:
+      containers
+    , haskell-src-meta
+    , liquid-base ==4.15.0.0
+    , liquidhaskell ==0.8.10.7
+    , mtl
+    , parsec
+    , process
+    , template-haskell ==2.17.0.0
+    , th-abstraction
+    , transformers
+  default-language: Haskell2010
+
+executable liquidhaskell-metaprogramming
+  main-is: Main.hs
+  other-modules:
+      Building
+      Debug
+      File
+      InlineTactic
+      Parsing
+      PruneAuto
+      ReadLH
+      Proof
+      Tactic.Core.Debug
+      Tactic.Core.Parse
+      Tactic.Core.Quote
+      Tactic.Core.Splice
+      Tactic.Core.Syntax
+      Tactic.Core.Utility
+      Tactic.Test.Test1
+      Tactic.Test.Test2
+      Tactic.Test.Test3
+      Tactic.Test.Test4
+      Paths_liquidhaskell_metaprogramming
+  hs-source-dirs:
+      app
+      src
   build-depends:
       containers
     , haskell-src-meta

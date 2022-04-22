@@ -1,4 +1,4 @@
-module Tactic.Prune where
+module PruneAuto where
 
 {-
 GOAL:

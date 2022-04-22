@@ -2,9 +2,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
-{-# OPTIONS_GHC "-ddump-splices" #-}
 
--- {-@ LIQUID "--compile-spec" @-}
 {-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--ple-local" @-}
 {-@ LIQUID "--short-names" @-}

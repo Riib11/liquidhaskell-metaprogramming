@@ -1,9 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{-# OPTIONS_GHC "-ddump-splices" #-}
--- {-@ LIQUID "--compile-spec" @-}
-
 {-@ LIQUID "--reflection" @-}
 
 module Tactic.Test.Test3 where

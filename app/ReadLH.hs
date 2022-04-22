@@ -1,4 +1,4 @@
-module Tactic.ReadLH where
+module ReadLH where
 
 {-
 Description:
