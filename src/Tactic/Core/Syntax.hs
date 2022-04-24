@@ -93,12 +93,11 @@ inferType e env = do
   case Map.lookup e (ctx env) of
     Just type_ -> pure type_
     Nothing -> case e of
-      VarE name -> do 
+      VarE name -> do
         -- return $! unsafePerformIO (print env)
         -- return $! unsafePerformIO (putStrLn "")
         debugM ""
-        debugM $ "inferType of " ++ show e
+        debugM $! "inferType of " ++ show e
         debugM ""
         reifyType name
-
       ConE name -> reifyType name

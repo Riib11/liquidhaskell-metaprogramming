@@ -28,16 +28,21 @@ dependencies:
   - transformers
   - process
 
-library:
-  source-dirs: src
-  # ghc-options:
-  #   - -fplugin=LiquidHaskell
-    # - -fplugin-opt=LiquidHaskell:--reflection
-    # - -fplugin-opt=LiquidHaskell:--ple-local
-    # - -ddump-splices
+# library:
+#   source-dirs: src
+#   # ghc-options:
+#   #   - -fplugin=LiquidHaskell
+#     # - -fplugin-opt=LiquidHaskell:--reflection
+#     # - -fplugin-opt=LiquidHaskell:--ple-local
+#     # - -ddump-splices
 
 executable:
   main: Main.hs
-  source-dirs: 
+  source-dirs:
     - app
     - src
+  # ghc-options:
+  #   - -fplugin=LiquidHaskell
+  # - -fplugin-opt=LiquidHaskell:--reflection
+  # - -fplugin-opt=LiquidHaskell:--ple-local
+  # - -ddump-splices

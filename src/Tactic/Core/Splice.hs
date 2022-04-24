@@ -27,15 +27,15 @@ import Prelude hiding (exp)
 
 _DUMP_AUTO = True
 
-type Splice a = StateT Environment Q a
+type Splice a = StateT Environment (QT IO) a
 
 spliceExp :: [Instr] -> Splice Exp
 spliceExp [] = lift [|trivial|]
 spliceExp (Intro {name} : instrs) = do
-  debugM $ "==================================================="
-  debugM $ "splicing: " ++ show (Intro {name})
+  debugM $! "==== intro ========================================================"
+  debugM $! "splicing: " ++ show (Intro {name})
   env <- get
-  debugM $ "environment:\n" ++ show env 
+  debugM $! "environment:\n" ++ show env
 
   types <- gets def_argTypes
   i <- gets arg_i
@@ -49,12 +49,13 @@ spliceExp (Intro {name} : instrs) = do
   e <- spliceExp instrs
   lift [|\ $(varP name) -> $(pure e)|]
 spliceExp (Destruct {name} : instrs) = do
-  debugM $ "==================================================="
-  debugM $ "splicing: " ++ show (Destruct {name})
+  debugM $! "==== destruct ====================================================="
+  debugM $! "splicing: " ++ show (Destruct {name})
   env <- get
-  debugM $ "environment:\n" ++ show env 
-
+  debugM $! "environment:\n" ++ show env
+  debugM $! "trying to infer type of " ++ show (VarE name)
   type_ <- get >>= lift . inferType (VarE name)
+  debugM $! "inferred type of " ++ show (VarE name) ++ " to be " ++ show type_
   case type_ of
     ConT dtName -> do
       -- remove destructed target from environment
@@ -82,12 +83,14 @@ spliceExp (Destruct {name} : instrs) = do
       lift $ caseE (varE name) (pure <$> ms)
     _ -> fail $ "Cannot destruct " ++ show name ++ " of non-datatype type " ++ show type_
 spliceExp (Induct {name} : instrs) = do
-  debugM $ "==================================================="
-  debugM $ "splicing: " ++ show (Induct {name})
+  debugM $! "==== induct ======================================================="
+  debugM $! "splicing: " ++ show (Induct {name})
   env <- get
-  debugM $ "environment:\n" ++ show env 
-
+  debugM $! "environment:\n" ++ show env
+  debugM $! "trying to infer type of " ++ show (VarE name)
   type_ <- get >>= \env -> lift $ inferType (VarE name) env
+  debugM $! "infered type of " ++ show (VarE name) ++ " to be " ++ show type_
+
   case type_ of
     ConT dtName -> do
       -- remove destructed target from environment
@@ -126,14 +129,15 @@ spliceExp (Use {exp} : instrs) = do
 spliceExp (Trivial : instrs) = spliceExp instrs
 spliceExp (Auto {hints, depth} : instrs) = do
   do
-    debugM $ "splicing: " ++ show (Auto {hints, depth})
+    debugM $! "==== auto ======================================================="
+    debugM $! "splicing: " ++ show (Auto {hints, depth})
     env <- get
-    debugM $ "environment:\n" ++ show env 
+    debugM $! "environment:\n" ++ show env
   e <- do
     env <- get
-    debugM $ "===========zzz=========zzz=======================zzz============="
-    debugM $ "hints: " ++ show hints
+    debugM $! "trying to infer type of hints: " ++ show hints
     ctx' <- lift $ Map.fromList <$> mapM (\x -> (x,) <$> inferType x env) hints
+    debugM $! "inferred type of hints to be " ++ show ctx'
     withStateT
       (\env -> env {ctx = Map.union ctx' (ctx env)})
       $ lift . useMany =<< genNeutrals Nothing depth
@@ -185,7 +189,7 @@ genNeutrals' e type_ gas = do
         argss <- fanout <$> traverse (\alpha -> genNeutrals (Just alpha) (gas - 1)) alphas
         let es = foldl AppE e <$> argss
         pure es
-  -- debugM $ "genNeutrals' (" ++ pprint e ++ ") (" ++ pprint type_ ++ ") " ++ show gas ++ " = " ++ show (pprint <$> es)
+  -- debugM $! "genNeutrals' (" ++ pprint e ++ ") (" ++ pprint type_ ++ ") " ++ show gas ++ " = " ++ show (pprint <$> es)
   pure es
 
 -- | generates any expressions directly from context (no applications) that have goal type
@@ -218,7 +222,7 @@ genRecursions goal gas = do
                           Nothing -> genNeutrals (Just alpha) (gas - 1) -- gen any neutral
                     )
                     (zip [0 .. length alphas] alphas)
-              -- debugM $ "genRecursions.argss: " ++ pprint (foldl AppE r <$> argss)
+              -- debugM $! "genRecursions.argss: " ++ pprint (foldl AppE r <$> argss)
               pure $ foldl AppE r <$> argss
         else pure []
     False -> pure []
