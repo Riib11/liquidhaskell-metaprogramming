@@ -14,6 +14,7 @@ import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax
 import System.IO.Unsafe (unsafePerformIO)
 import Tactic.Core.Debug
+import Prelude hiding (exp)
 
 data Instr
   = -- | splices a lambda; adds name to environment
@@ -30,7 +31,15 @@ data Instr
     Use {exp :: Exp}
   | -- | trivial
     Trivial
-  deriving (Show)
+
+instance Show Instr where
+  show (Intro {name}) = "intro " ++ pprint name
+  show (Destruct {name}) = "destruct " ++ pprint name
+  show (Induct {name}) = "induct " ++ pprint name
+  show (Auto {hints, depth}) = "auto " ++ show (pprint <$> hints) ++ " " ++ show depth
+  show (Assert {exp}) = "assert " ++ pprint exp
+  show (Use {exp}) = "use " ++ pprint exp
+  show Trivial = "trivial"
 
 type Ctx = Map Exp Type
 
@@ -59,8 +68,10 @@ instance Show Environment where
 introArg :: Name -> Type -> Environment -> Environment
 introArg name type_ env =
   env
-    { def_argNames = def_argNames env ++ [name],
-      def_argTypes = def_argTypes env ++ [type_],
+    { -- these are handled during parsing
+      -- def_argNames = def_argNames env ++ [name],
+      -- def_argTypes = def_argTypes env ++ [type_],
+      arg_i = arg_i env + 1,
       ctx = Map.insert (VarE name) type_ $ ctx env
     }
 

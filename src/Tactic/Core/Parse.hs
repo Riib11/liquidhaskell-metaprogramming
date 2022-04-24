@@ -97,16 +97,17 @@ parseDecInstrs = do
   let (def_argTypes, _) = flattenType def_type
   -- imp
   _ <- parseName -- == def_name
-  names <- P.many parseName
+  def_argNames <- P.many parseName
   parseSymbol "="
   instrs <- parseInstrs
   pure
     ( emptyEnvironment
         { def_name = def_name,
           def_type = def_type,
+          def_argNames = def_argNames,
           def_argTypes = def_argTypes
         },
-      ((\name -> Intro {name}) <$> names)
+      ((\name -> Intro {name}) <$> def_argNames)
         ++ instrs
     )
 

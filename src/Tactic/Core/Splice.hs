@@ -1,3 +1,4 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes #-}
@@ -27,35 +28,42 @@ import Prelude hiding (exp)
 
 _DUMP_AUTO = True
 
-type Splice a = StateT Environment (QT IO) a
+debugSplice :: String -> Splice ()
+debugSplice = lift . debugQ
+
+type Splice a = StateT Environment Q a
+
+-- restricts to local state
+local :: Splice a -> Splice a
+local m = do
+  st <- get
+  lift $ evalStateT m st
 
 spliceExp :: [Instr] -> Splice Exp
 spliceExp [] = lift [|trivial|]
 spliceExp (Intro {name} : instrs) = do
-  debugM $! "==== intro ========================================================"
-  debugM $! "splicing: " ++ show (Intro {name})
+  -- debugSplice $! "==== intro ========================================================"
+  -- debugSplice $! "splicing: " ++ show (Intro {name})
   env <- get
-  debugM $! "environment:\n" ++ show env
+  -- debugSplice $! "environment:\n" ++ show env
 
   types <- gets def_argTypes
+  def_type <- gets def_type
   i <- gets arg_i
   env <- get
-  type_ <- case types `index` i of
-    Just type_ -> do
-      modify $ \env -> env {arg_i = 1 + arg_i env}
-      pure type_
-    Nothing -> fail $ "Cannot intro " ++ show name ++ " at non-function type"
-  modify $ introArg name type_
+  case types `index` i of
+    Just type_ -> modify $ introArg name type_
+    Nothing -> fail $ "Cannot intro " ++ show name ++ " at index  " ++ show i ++ " in def_type " ++ pprint def_type
   e <- spliceExp instrs
   lift [|\ $(varP name) -> $(pure e)|]
 spliceExp (Destruct {name} : instrs) = do
-  debugM $! "==== destruct ====================================================="
-  debugM $! "splicing: " ++ show (Destruct {name})
+  -- debugSplice $! "==== destruct ====================================================="
+  -- debugSplice $! "splicing: " ++ show (Destruct {name})
   env <- get
-  debugM $! "environment:\n" ++ show env
-  debugM $! "trying to infer type of " ++ show (VarE name)
+  -- debugSplice $! "environment:\n" ++ show env
+  -- debugSplice $! "trying to infer type of " ++ show (VarE name)
   type_ <- get >>= lift . inferType (VarE name)
-  debugM $! "inferred type of " ++ show (VarE name) ++ " to be " ++ show type_
+  -- debugSplice $! "inferred type of " ++ show (VarE name) ++ " to be " ++ show type_
   case type_ of
     ConT dtName -> do
       -- remove destructed target from environment
@@ -83,13 +91,13 @@ spliceExp (Destruct {name} : instrs) = do
       lift $ caseE (varE name) (pure <$> ms)
     _ -> fail $ "Cannot destruct " ++ show name ++ " of non-datatype type " ++ show type_
 spliceExp (Induct {name} : instrs) = do
-  debugM $! "==== induct ======================================================="
-  debugM $! "splicing: " ++ show (Induct {name})
+  -- debugSplice $! "==== induct ======================================================="
+  -- debugSplice $! "splicing: " ++ show (Induct {name})
   env <- get
-  debugM $! "environment:\n" ++ show env
-  debugM $! "trying to infer type of " ++ show (VarE name)
+  -- debugSplice $! "environment:\n" ++ show env
+  -- debugSplice $! "trying to infer type of " ++ show (VarE name)
   type_ <- get >>= \env -> lift $ inferType (VarE name) env
-  debugM $! "infered type of " ++ show (VarE name) ++ " to be " ++ show type_
+  -- debugSplice $! "infered type of " ++ show (VarE name) ++ " to be " ++ show type_
 
   case type_ of
     ConT dtName -> do
@@ -100,7 +108,7 @@ spliceExp (Induct {name} : instrs) = do
       -- gen matches
       let dtConInfos = datatypeCons dtInfo
       let matches =
-            ( \conInfo -> do
+            ( \conInfo -> local do
                 -- collects newly bound variables with types, generates match's pattern
                 (vars, pat) <- lift $ getConVarsPat conInfo
                 -- add constructor's variables to `args_rec_ctx` at `name`
@@ -128,16 +136,14 @@ spliceExp (Use {exp} : instrs) = do
   lift [|use $(pure exp) &&& $(pure e)|]
 spliceExp (Trivial : instrs) = spliceExp instrs
 spliceExp (Auto {hints, depth} : instrs) = do
-  do
-    debugM $! "==== auto ======================================================="
-    debugM $! "splicing: " ++ show (Auto {hints, depth})
-    env <- get
-    debugM $! "environment:\n" ++ show env
-  e <- do
-    env <- get
-    debugM $! "trying to infer type of hints: " ++ show hints
-    ctx' <- lift $ Map.fromList <$> mapM (\x -> (x,) <$> inferType x env) hints
-    debugM $! "inferred type of hints to be " ++ show ctx'
+  debugSplice $! "==== auto ======================================================="
+  debugSplice $! "splicing: " ++ show (Auto {hints, depth})
+  env <- get
+  debugSplice $! "environment:\n" ++ show env
+  debugSplice $! "trying to infer type of hints: " ++ show hints
+  ctx' <- lift $ Map.fromList <$> mapM (\x -> (x,) <$> inferType x env) hints
+  debugSplice $! "inferred type of hints to be " ++ show ctx'
+  e <-
     withStateT
       (\env -> env {ctx = Map.union ctx' (ctx env)})
       $ lift . useMany =<< genNeutrals Nothing depth
@@ -189,7 +195,7 @@ genNeutrals' e type_ gas = do
         argss <- fanout <$> traverse (\alpha -> genNeutrals (Just alpha) (gas - 1)) alphas
         let es = foldl AppE e <$> argss
         pure es
-  -- debugM $! "genNeutrals' (" ++ pprint e ++ ") (" ++ pprint type_ ++ ") " ++ show gas ++ " = " ++ show (pprint <$> es)
+  -- debugSplice $! "genNeutrals' (" ++ pprint e ++ ") (" ++ pprint type_ ++ ") " ++ show gas ++ " = " ++ show (pprint <$> es)
   pure es
 
 -- | generates any expressions directly from context (no applications) that have goal type
@@ -222,7 +228,7 @@ genRecursions goal gas = do
                           Nothing -> genNeutrals (Just alpha) (gas - 1) -- gen any neutral
                     )
                     (zip [0 .. length alphas] alphas)
-              -- debugM $! "genRecursions.argss: " ++ pprint (foldl AppE r <$> argss)
+              -- debugSplice $! "genRecursions.argss: " ++ pprint (foldl AppE r <$> argss)
               pure $ foldl AppE r <$> argss
         else pure []
     False -> pure []
