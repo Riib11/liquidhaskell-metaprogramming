@@ -65,7 +65,7 @@ spliceExp (Destruct {name} : instrs) = do
   type_ <- get >>= lift . inferType (VarE name)
   -- debugSplice $! "inferred type of " ++ show (VarE name) ++ " to be " ++ show type_
   case type_ of
-    ConT dtName -> do
+    ConT dtName -> local do
       -- remove destructed target from environment
       modify $ deleteCtx (VarE name)
       -- get datatype info
