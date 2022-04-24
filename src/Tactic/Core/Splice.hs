@@ -143,10 +143,12 @@ spliceExp (Auto {hints, depth} : instrs) = do
   debugSplice $! "trying to infer type of hints: " ++ show hints
   ctx' <- lift $ Map.fromList <$> mapM (\x -> (x,) <$> inferType x env) hints
   debugSplice $! "inferred type of hints to be " ++ show ctx'
+  proof <- lift [t|Proof|]
   e <-
     withStateT
       (\env -> env {ctx = Map.union ctx' (ctx env)})
-      $ lift . useMany =<< genNeutrals Nothing depth
+      -- $ lift . useMany =<< genNeutrals (Just proof) depth
+      $ lift . conjunction =<< genNeutrals (Just proof) depth
   e' <- spliceExp instrs
   lift [|$(pure e) &&& $(pure e')|]
 

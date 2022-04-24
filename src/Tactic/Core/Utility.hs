@@ -53,3 +53,8 @@ useMany :: [Exp] -> Q Exp
 useMany [] = [|trivial|]
 useMany [e] = [|use $(pure e)|]
 useMany (e : es) = [|use $(pure e) &&& $(useMany es)|]
+
+conjunction :: [Exp] -> Q Exp
+conjunction [] = [|trivial|]
+conjunction [e] = pure e
+conjunction (e : es) = [|$(pure e) &&& $(conjunction es)|]

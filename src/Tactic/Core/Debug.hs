@@ -8,7 +8,7 @@ import Control.Monad
 import Language.Haskell.TH
 import System.IO.Unsafe (unsafePerformIO)
 
-_DEBUG = True
+_DEBUG = False
 
 debug :: String -> ()
 debug msg =

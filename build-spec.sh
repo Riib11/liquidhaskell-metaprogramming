@@ -1,2 +1,2 @@
 # disable LH
-stack build --fast --ghc-options "-fplugin-opt=LiquidHaskell:--compile-spec"
+stack build --fast --ghc-options "-fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--compile-spec"

@@ -39,6 +39,9 @@ executable liquidhaskell-metaprogramming
       Tactic.Core.Splice
       Tactic.Core.Syntax
       Tactic.Core.Utility
+      Tactic.Test.Test1
+      Tactic.Test.Test2
+      Tactic.Test.Test3
       Tactic.Test.Test4
       Tactic.Test.Test5
       Paths_liquidhaskell_metaprogramming

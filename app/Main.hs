@@ -1,12 +1,13 @@
 module Main where
 
-import Debug
+{-@ LIQUID "--compile-spec" @-}
+
 import Building
+import Debug
 import File
 import InlineTactic
-import System.Process as Process
 import System.Environment as Environment
-
+import System.Process as Process
 
 main = do
   -- consoleIO "cleaning..."
@@ -19,7 +20,7 @@ main = do
   args <- getArgs
   case args of
     [filePath] -> do
-      filePath <- toGlobalFilePath "src/Tactic/Test/Test4.hs"
+      filePath <- toGlobalFilePath filePath -- "src/Tactic/Test/Test4.hs"
       inlineTactics filePath
     [] -> error "No arguments! Requires exactly 1 argument, a filePath"
     _ -> error "Too many arguments! Requires exactly 1 argument, a filePath"
